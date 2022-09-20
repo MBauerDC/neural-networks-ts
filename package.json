@@ -1,0 +1,17 @@
+{
+  "name": "neural-network-example",
+  "module": "index.ts",
+  "type": "module",
+  "dependencies": {
+    "matrices": "git@github.com:MBauerDC/matrices-ts.git#ce02179a95f10c0bfbd50534ff812a6f27efe89d"
+  },
+  "devDependencies": {
+      "gpu.js":"^2.15.2",
+      "node-ts":"^5.1.2",
+      "ts-node":"^10.9.1"
+  },
+  "scripts": {
+      "build-ts": "tsc",
+      "watch-ts": "tsc -w"
+  }
+}

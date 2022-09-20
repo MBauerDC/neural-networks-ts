@@ -45,8 +45,8 @@ type Layer<N extends Dimension, F extends number> = {
     getPreviousLayerConnection(): ConnectionMatrix<N, Dimension, F> | undefined
     getNextLayer(): Layer<Dimension, F> | undefined;
     getNextLayerConnection(): ConnectionMatrix<Dimension, N, F> | undefined
-    setPreviousLayer<I extends Dimension>(layer: Layer<I, F>, weights: ConnectionMatrix<N, I, F>);
-    setNextLayer<O extends Dimension>(layer: Layer<O, F>, weights: ConnectionMatrix<O, N, F>);
+    setPreviousLayer<I extends Dimension>(layer: Layer<I, F>, weights: ConnectionMatrix<N, I, F>): void;
+    setNextLayer<O extends Dimension>(layer: Layer<O, F>, weights: ConnectionMatrix<O, N, F>) : void;
     feedToNextLayer(): void;
     feedForward(): void;
     getSummedInputs(): MutableColumn<N, F> | MutableMatrix<N, Dimension, F> | undefined;
@@ -69,78 +69,97 @@ class GenericLayer<N extends Dimension, F extends number> implements Layer<N, F>
         this.n = activations.n;
     }
 
-
-    public reset(): void {
-        this.activations.scale(0 as F);
-        this.biases.scale(0 as F);
-        this._summedInputs.scale(0 as F);
+    getPreviousLayer(): Layer<number, F> | undefined {
+        return this._previousLayer;
     }
 
-    public setActivations(values: MutableColumn<N, F> | MutableMatrix<N, Dimension, F>): void {
-        this.activations = values;
-    }
-
-    public setBiases(biases: MutableColumn<N, F>): void {
-        this.biases = biases;
-    }
-
-    public previousLayer(): Layer<Dimension, F> | undefined { 
-        return this._previousLayer; 
-    }
-
-    public previousLayerConnection(): ConnectionMatrix<N, Dimension, F> | undefined {
+    getPreviousLayerConnection(): ConnectionMatrix<N, number, F> | undefined {
         return this._previousLayerConnection;
     }
 
-    public nextLayer(): Layer<Dimension, F> | undefined {
+    getNextLayer(): Layer<number, F> | undefined {
         return this._nextLayer;
     }
 
-    public nextLayerConnection(): ConnectionMatrix<Dimension, N, F> | undefined {
+    getNextLayerConnection(): ConnectionMatrix<number, N, F> | undefined {
         return this._nextLayerConnection;
     }
 
-    public setPreviousLayer<I extends Dimension>(layer: Layer<I, F>, weights: ConnectionMatrix<N, I, F>): void {
+    getSummedInputs(): MutableColumn<N, F> | MutableMatrix<N, number, F> | undefined {
+        return this._summedInputs;
+    }
+
+    reset(): void {
+        this.activations.scale(0 as F);
+        this.biases.scale(0 as F);
+        this._summedInputs?.scale(0 as F);
+    }
+
+    setActivations(values: MutableColumn<N, F> | MutableMatrix<N, Dimension, F>): void {
+        this.activations = values;
+    }
+
+    setBiases(biases: MutableColumn<N, F>): void {
+        this.biases = biases;
+    }
+
+    previousLayer(): Layer<Dimension, F> | undefined { 
+        return this._previousLayer; 
+    }
+
+    previousLayerConnection(): ConnectionMatrix<N, Dimension, F> | undefined {
+        return this._previousLayerConnection;
+    }
+
+    nextLayer(): Layer<Dimension, F> | undefined {
+        return this._nextLayer;
+    }
+
+    nextLayerConnection(): ConnectionMatrix<Dimension, N, F> | undefined {
+        return this._nextLayerConnection;
+    }
+
+    setPreviousLayer<I extends Dimension>(layer: Layer<I, F>, weights: ConnectionMatrix<N, I, F>): void {
         this._previousLayer = layer;
         this._previousLayerConnection = weights;
     }
 
-    public setNextLayer<O extends Dimension>(layer: Layer<O, F>, weights: ConnectionMatrix<O, N, F>): void {
+    setNextLayer<O extends Dimension>(layer: Layer<O, F>, weights: ConnectionMatrix<O, N, F>): void {
         this._nextLayer = layer;
         this._nextLayerConnection = weights;
     }
 
-    public summedInputs(): MutableColumn<N, F> | MutableMatrix<N, Dimension, F> | undefined {
+    summedInputs(): MutableColumn<N, F> | MutableMatrix<N, Dimension, F> | undefined {
         return this._summedInputs;
     }
 
-    public setSummedInputs(summedInputs: MutableColumn<N, F> | MutableMatrix<N, Dimension, F>): void {
+    setSummedInputs(summedInputs: MutableColumn<N, F> | MutableMatrix<N, Dimension, F>): void {
         this._summedInputs = summedInputs;
     }
 
-    public feedToNextLayer<O extends Dimension>(): void {
+    feedToNextLayer<O extends Dimension>(): void {
         if (this._nextLayer === undefined) {
             return;
         }
         // multiply weight-matrix with values of current layer
         console.log("Current layer values: ", this.activations);
         console.log("Next layer weights: ", this._nextLayerConnection);
-        let newValues = toMutable(multiplyMatrices(this._nextLayerConnection, this.activations));
+        let newValues = toMutable(multiplyMatrices(this._nextLayerConnection as unknown as Matrix<O, N, F>, this.activations as Matrix<N, number, F>)) as MutableMatrix<O, number, F>;
         console.log("New values after multiply: ", newValues);
         // add biases (for each column representing a data point)
         const biasMatrixData = (new Array<MutableColumn<Dimension, F>>(newValues.m)).fill(this._nextLayer.biases);
         const biasMatrix = new GenericMatrix<O, Dimension, F>(null, null, biasMatrixData as unknown as Column<O, F>[], this._nextLayer.biases.n as O, newValues.m);
-        newValues.add(this._nextLayer.biases);
+        newValues.add(biasMatrix);
         this._nextLayer.setSummedInputs(newValues)
         console.log("New values after add biases: ", newValues);
         // apply activation function
-        const newActivations = newValues.mapped((f: F) => this._nextLayer.activationFunction.calculate(f) as F);
+        const newActivations = newValues.mapped((f: F) => this._nextLayer?.activationFunction.calculate(f) as F);
         console.log("New values after activation Function: ", newActivations);
         // set new values
         this._nextLayer.setActivations(newActivations);
     }
 
-    public feedForward(): void {
+    feedForward(): void {
         if (this._nextLayer === undefined) {
             return;
         }
@@ -162,20 +181,20 @@ const output = outputLayer.activations;
 console.log(output);
 
 export class Network<I extends Dimension, O extends Dimension> {
-    public readonly layers: Layer<Dimension, number>[];
-    public readonly weights: ConnectionMatrix<Dimension, Dimension, number>[];
-    public readonly i: I;
-    public readonly o: O;
+    readonly layers: Layer<Dimension, number>[] = [];
+    readonly weights: ConnectionMatrix<Dimension, Dimension, number>[] = [];
+    readonly i: I;
+    readonly o: O;
     constructor(initialLayer: Layer<I, number>) {
         this.weights = [];
         let currLayer: Layer<Dimension, number> = initialLayer;
         this.i = currLayer.n as I;
-        let nextLayer: Layer<Dimension, number> = currLayer.getNextLayer();
+        let nextLayer: Layer<Dimension, number> | undefined = currLayer.getNextLayer();
         this.layers.push(currLayer);
         let i = 1;
         while (nextLayer !== undefined) {
             this.layers[i] = nextLayer;
-            this.weights[1 + 1] = currLayer.getNextLayerConnection();
+            this.weights[1 + 1] = currLayer.getNextLayerConnection()!;
             currLayer = nextLayer;
             nextLayer = currLayer.getNextLayer();
             i++;
@@ -183,14 +202,14 @@ export class Network<I extends Dimension, O extends Dimension> {
         this.o = currLayer.n as O;
     }
 
-    public feedThrough(input: Column<I, number> | Matrix<I, Dimension, number>): Column<O, number> | Matrix<O, Dimension, number> {
+    feedThrough(input: Column<I, number> | Matrix<I, Dimension, number>): Column<O, number> | Matrix<O, Dimension, number> {
         this.layers[0].setActivations(toMutable(input) as MutableColumn<I, number>);
         this.layers[0].feedForward();
         return this.layers[this.layers.length - 1].activations as unknown as Column<O, number>;
     }
 
-    public getActivations(layerIdx: number): Column<Dimension, number> {
-        return this.layers[layerIdx].activations;
+    getActivations(layerIdx: number): Column<O, number> | Matrix<O, Dimension, number>{
+        return this.layers[layerIdx].activations as unknown as Column<O, number> | Matrix<O, Dimension, number>;
     }
     
 }
@@ -398,14 +417,14 @@ class BackpropagationLearner implements Learner {
         }
     }
 
-    public learnBatch(dataPoints: Array<LabelledDataPoint<Dimension, Dimension>>, learningRate: number, momentum: number = 0, regularization: number = 0): void {
+    learnBatch(dataPoints: Array<LabelledDataPoint<Dimension, Dimension>>, learningRate: number, momentum: number = 0, regularization: number = 0): void {
         for (const dataPoint of dataPoints) {
             this.updateAllGradients(dataPoint);
         }
         this.applyAllGradients(learningRate / dataPoints.length, momentum, regularization);
     }
 
-    public train<N extends number, M extends number>(dataPointGenerator: LabelledDataPointGenerator<N, M>, learningRate: number, momentum: number, regularization: number, batchSize: number, epochs: number): void {
+    train<N extends number, M extends number>(dataPointGenerator: LabelledDataPointGenerator<N, M>, learningRate: number, momentum: number, regularization: number, batchSize: number, epochs: number): void {
         for (let layerIdx = 1; layerIdx < this.network.layers.length; layerIdx++) {
             this.randomizeWeights(layerIdx);
         }

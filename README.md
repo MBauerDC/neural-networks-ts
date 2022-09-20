@@ -3,13 +3,10 @@
 To install dependencies:
 
 ```bash
-bun install
+npm install
 ```
 
-To run:
-
+To compile:
 ```bash
-bun run index.ts
+npm run build-ts
 ```
-
-This project was created using `bun init` in bun v0.1.11. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.

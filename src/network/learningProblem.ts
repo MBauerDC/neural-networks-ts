@@ -1,4 +1,4 @@
-import { Dimension, Matrix } from "../matrices/matrix";
+import { Dimension, Matrix } from "../../node_modules/matrices/src/matrix";
 import { EncodingDecodingScheme } from "./encoding";
 
 type LabelType = string|number;

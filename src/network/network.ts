@@ -1,4 +1,4 @@
-import { Column, Dimension } from "../../node_modules/matrices/src/matrix";
+import { Column, Dimension, Matrix, GenericMatrix, multiplyMatrices } from "../../node_modules/matrices/src/matrix";
 import { MutableMatrix, MutableColumn, GenericMutableMatrix, GenericMutableColumn, GenericMutableRow } from "../../node_modules/matrices/src/mutable";
 import { toMutable } from "../../node_modules/matrices/src/sparseMutable";
 import { initializeWeightMatrix } from "../utils/random";
@@ -36,10 +36,10 @@ type ConnectionMatrix<O extends Dimension, N extends Dimension, F extends number
 
 type Layer<N extends Dimension, F extends number> = {
     n: N,
-    activations: MutableColumn<N, F>;
+    activations: MutableColumn<N, F> | MutableMatrix<N, Dimension, F>;
     biases: MutableColumn<N, F>;
     activationFunction: ActivationFunctionClass;
-    setActivations(values: MutableColumn<N, F>): void;
+    setActivations(values: MutableColumn<N, F> | MutableMatrix<N, Dimension, F>): void;
     setBiases(biases: MutableColumn<N, F>): void;
     getPreviousLayer(): Layer<Dimension, F> | undefined;
     getPreviousLayerConnection(): ConnectionMatrix<N, Dimension, F> | undefined
@@ -49,8 +49,8 @@ type Layer<N extends Dimension, F extends number> = {
     setNextLayer<O extends Dimension>(layer: Layer<O, F>, weights: ConnectionMatrix<O, N, F>);
     feedToNextLayer(): void;
     feedForward(): void;
-    getSummedInputs(): MutableColumn<N, F> | undefined;
-    setSummedInputs(summedInputs: MutableColumn<N, F>): void
+    getSummedInputs(): MutableColumn<N, F> | MutableMatrix<N, Dimension, F> | undefined;
+    setSummedInputs(summedInputs: MutableColumn<N, F> | MutableMatrix<N, Dimension, F>): void
 }
 
 class GenericLayer<N extends Dimension, F extends number> implements Layer<N, F> {
@@ -58,11 +58,11 @@ class GenericLayer<N extends Dimension, F extends number> implements Layer<N, F>
     private _nextLayer: Layer<Dimension, F> | undefined;
     private _previousLayerConnection: ConnectionMatrix<N, Dimension, F> | undefined;
     private _nextLayerConnection: ConnectionMatrix<Dimension, N, F> | undefined;
-    private _summedInputs: MutableColumn<N, F> | undefined;
+    private _summedInputs: MutableColumn<N, F> | MutableMatrix<N, Dimension, F> | undefined;
     public readonly n: N;
 
     constructor(
-        public activations: MutableColumn<N, F>,
+        public activations: MutableColumn<N, F> | MutableMatrix<N, Dimension, F>,
         public biases: MutableColumn<N, F>,
         public readonly activationFunction: ActivationFunctionClass
     ) {
@@ -73,9 +73,10 @@ class GenericLayer<N extends Dimension, F extends number> implements Layer<N, F>
     public reset(): void {
         this.activations.scale(0 as F);
         this.biases.scale(0 as F);
+        this._summedInputs.scale(0 as F);
     }
 
-    public setActivations(values: MutableColumn<N, F>): void {
+    public setActivations(values: MutableColumn<N, F> | MutableMatrix<N, Dimension, F>): void {
         this.activations = values;
     }
 
@@ -109,11 +110,11 @@ class GenericLayer<N extends Dimension, F extends number> implements Layer<N, F>
         this._nextLayerConnection = weights;
     }
 
-    public summedInputs(): MutableColumn<N, F> | undefined {
+    public summedInputs(): MutableColumn<N, F> | MutableMatrix<N, Dimension, F> | undefined {
         return this._summedInputs;
     }
 
-    public setSummedInputs(summedInputs: MutableColumn<N, F>): void {
+    public setSummedInputs(summedInputs: MutableColumn<N, F> | MutableMatrix<N, Dimension, F>): void {
         this._summedInputs = summedInputs;
     }
 
@@ -124,9 +125,11 @@ class GenericLayer<N extends Dimension, F extends number> implements Layer<N, F>
         // multiply weight-matrix with values of current layer
         console.log("Current layer values: ", this.activations);
         console.log("Next layer weights: ", this._nextLayerConnection);
-        let newValues = this._nextLayerConnection.getMultiplication(this.activations).getColumn(0);
+        let newValues = toMutable(multiplyMatrices(this._nextLayerConnection, this.activations));
         console.log("New values after multiply: ", newValues);
-        // add biases
+        // add biases (for each column representing a data point)
+        const biasMatrixData = (new Array<MutableColumn<Dimension, F>>(newValues.m)).fill(this._nextLayer.biases);
+        const biasMatrix = new GenericMatrix<O, Dimension, F>(null, null, biasMatrixData as unknown as Column<O, F>[], this._nextLayer.biases.n as O, newValues.m);
         newValues.add(this._nextLayer.biases);
         this._nextLayer.setSummedInputs(newValues)
         console.log("New values after add biases: ", newValues);
@@ -180,7 +183,7 @@ export class Network<I extends Dimension, O extends Dimension> {
         this.o = currLayer.n as O;
     }
 
-    public feedThrough(input: Column<I, number>): Column<O, number> {
+    public feedThrough(input: Column<I, number> | Matrix<I, Dimension, number>): Column<O, number> | Matrix<O, Dimension, number> {
         this.layers[0].setActivations(toMutable(input) as MutableColumn<I, number>);
         this.layers[0].feedForward();
         return this.layers[this.layers.length - 1].activations as unknown as Column<O, number>;

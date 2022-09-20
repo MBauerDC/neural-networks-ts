@@ -1,6 +1,4 @@
-import { KeyExportOptions } from "crypto";
-import { Domain } from "domain";
-import { Column, Dimension, Matrix, MutableColumn, MutableMatrix } from "../matrices/matrix";
+import { Column, Dimension, Matrix, MutableColumn, MutableMatrix } from "../../node_modules/matrices/src/index";
 import { Network } from "./network";
 
 interface LayerGradientData<N extends Dimension, M extends Dimension> {

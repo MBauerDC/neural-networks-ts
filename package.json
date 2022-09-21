@@ -1,8 +1,8 @@
 {
   "name": "neural-network-example",
   "module": "index.ts",
-  "type": "module",
   "dependencies": {
+    "fs": "^0.0.1-security",
     "matrices": "git@github.com:MBauerDC/matrices-ts.git#ce02179a95f10c0bfbd50534ff812a6f27efe89d"
   },
   "devDependencies": {

@@ -31,6 +31,12 @@ function labelledDataPointGeneratorFromSet<N extends Dimension, M extends Dimens
     })();
 }
 
+function labelledDataPointGeneratorFromCSVFile<N extends Dimension, M extends Dimension>(filePath: string, ): LabelledDataPointGenerator<N, M> {
+    return (function* () {
+        // TODO
+    })();
+}
+
 type ConnectionMatrix<O extends Dimension, N extends Dimension, F extends number> = MutableMatrix<O, N, F>;
 
 

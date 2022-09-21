@@ -22,8 +22,9 @@
     "typeRoots": ["./node_modules/@types"],
     "outDir": "dist",
     "lib": ["ESNext"],
-    "module": "commonjs",
-    "target": "esnext"/*,
+    //"moduleResolution": "NodeNext",
+    "module": "CommonJS",
+    "target": "ESNext"/*,
     "types": ["bun-types"]*/
   },
 

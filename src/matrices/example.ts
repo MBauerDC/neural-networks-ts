@@ -1,4 +1,4 @@
-import { LinearAlgebra } from "./linearAlgebra";
+import { ElementaryRowOperations } from "./../../node_modules/matrices/src/linearAlgebra";
 import { Matrix } from "./matrix";
 import { GenericMutableMatrix, MutableMatrix } from "./mutable";
 
@@ -9,8 +9,8 @@ const threeByTwo: Matrix<3,2,T> = new GenericMutableMatrix<3, 2, T>([[1, 2], [-3
 const twoByFour: MutableMatrix<2,4,T> = new GenericMutableMatrix<2, 4, T>([[12, 2, -3, 4], [0, -6, 7, 8]], null, null, 2, 4);
 const threeByFour: MutableMatrix<3,4,T> = new GenericMutableMatrix<3, 4, T>([[32, -1, -3, 4], [0, -6, 7, 8], [4, 7, 2.5, 0]], null, null, 3, 4);
 const fourByFive: MutableMatrix<4,5,T> = new GenericMutableMatrix<4, 5, T>([[1, 2, 3, -4, 5], [6, 0, 8, 9, 10], [11, 12.5, 13, 14, 15], [16, 17, 18, -19, 20]], null, null, 4, 5);
-const swapRowTwoAndThreeOfFour = LinearAlgebra.ElementaryRowOperations.getSwapOperation(1, 2, 4);
-const addTwiceRowFourToRowThree = LinearAlgebra.ElementaryRowOperations.getAddScaledOperation(2, 3, 2, 4);
+const swapRowTwoAndThreeOfFour = ElementaryRowOperations.getSwapOperation(1, 2, 4);
+const addTwiceRowFourToRowThree = ElementaryRowOperations.getAddScaledOperation(2, 3, 2, 4);
 const fourByFiveSwapped: MutableMatrix<4,5,T> = swapRowTwoAndThreeOfFour.getTransformationMatrix().getMultiplication(fourByFive);
 const afterOperationTwo: MutableMatrix<4, 5, T> = addTwiceRowFourToRowThree.getTransformationMatrix().getMultiplication(fourByFiveSwapped);
 const transposedAfterOperationTwo: MutableMatrix<5, 4, T> = afterOperationTwo.getTranspose();

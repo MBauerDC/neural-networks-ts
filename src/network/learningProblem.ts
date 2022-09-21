@@ -1,4 +1,5 @@
 import { Dimension, Matrix } from "../../node_modules/matrices/src/matrix";
+import { LearningError } from "./cost";
 import { EncodingDecodingScheme } from "./encoding";
 
 type LabelType = string|number;
@@ -8,6 +9,7 @@ interface ProblemSpecification<I extends Dimension, O extends Dimension> {
     o: O,
     isClassificationProblem: boolean;
     isRegressionProblem: boolean;
+    error: LearningError<O>;
   }
   
 

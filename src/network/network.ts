@@ -180,7 +180,7 @@ initialLayer.feedForward();
 const output = outputLayer.activations;
 console.log(output);
 
-export class Network<I extends Dimension, O extends Dimension> {
+class Network<I extends Dimension, O extends Dimension> {
     readonly layers: Layer<Dimension, number>[] = [];
     readonly weights: ConnectionMatrix<Dimension, Dimension, number>[] = [];
     readonly i: I;
@@ -533,4 +533,4 @@ class Backpropagation<O extends Dimension> {
     
 }
 
-            
+export { DataPoint, DataPointGenerator, LabelledDataPoint, LabelledDataPointGenerator, Layer, ConnectionMatrix, Network, labelledDataPointGeneratorFromSequence, labelledDataPointGeneratorFromSet};

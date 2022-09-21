@@ -1,11 +1,11 @@
-import { Column, Dimension, MatrixContent } from "../matrices/matrix";
-import { GenericSparseMutableColumn } from "../matrices/sparse";
+import { Column, Dimension, MatrixContent } from "../../node_modules/matrices/src/matrix";
+import { GenericSparseMutableColumn } from "../../node_modules/matrices/src/sparseMutable";
 
 type EncodingSchemeType = "one-hot" | "binary" | "ordinal";
 type EncodingScheme<I extends any, O extends MatrixContent, N extends Dimension> = (i: I) => Column<N, O>;
 type DecodingSchemeType = EncodingSchemeType;
-type DecodingScheme<N extends Dimension, I extends MatrixContent, O extends any> = (i: Column<N, I>) => O;
-type EncodingDecodingScheme<N extends Dimension, A extends any, B extends MatrixContent> = { encoding: EncodingScheme<A, B, N>, decoding: DecodingScheme<N, B, A> };
+type DecodingScheme<I extends MatrixContent, O extends any, N extends Dimension> = (i: Column<N, I>) => O;
+type EncodingDecodingScheme<N extends Dimension, E extends any, M extends MatrixContent> = { encoding: EncodingScheme<E, M, N>, decoding: DecodingScheme<M, E, N> };
 type LabelType = string|number;
 type LabelLookup<T extends LabelType> = (idx: number) => T;
 

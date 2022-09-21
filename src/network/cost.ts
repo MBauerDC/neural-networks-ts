@@ -1,4 +1,4 @@
-import { Column, Dimension } from "../matrices/matrix";
+import { Column, Dimension } from "../../node_modules/matrices/src/matrix";
 export type TotalCostEvaluator<N extends Dimension> = (distance: Column<N, number>) => number;
 export type CostFunction<N extends Dimension> = (expected: Column<N, number>, actual: Column<N, number>) => number;
 export type CostFunctionCtor<N extends Dimension> = (nodeCostFunction: NodeCostFunction) => CostFunction<N>;
@@ -21,8 +21,8 @@ export const categoricalCrossEntropy: NodeCostFunction = (expected, actual) => -
 export const categoricalCrossEntropyDerivative: NodeCostFunctionDerivative = (expected, actual) => -expected / actual;
 export const getLinearCostFunction: CostFunctionCtor<Dimension> = <N extends Dimension>(nodeCostFunction: NodeCostFunction) => {
   const vectorFn: CostFunction<N> = (expected: Column<N, number>, actual: Column<N, number>) => {
-    return Array.from(expected.generateColumn(0)).reduce((acc, _, i) => {
-      acc += nodeCostFunction(expected.getValue(i, 0), actual.getValue(i, 0));
+    return Array.from(expected.generateColumn(0)).reduce((acc, expectedValue, i) => {
+      acc += nodeCostFunction(expectedValue, actual.getValue(i, 0));
       return acc;
     });
   };
@@ -30,8 +30,8 @@ export const getLinearCostFunction: CostFunctionCtor<Dimension> = <N extends Dim
 }
 export const getMeanCostFunction: CostFunctionCtor<Dimension> = <N extends Dimension>(nodeCostFunction: NodeCostFunction) => {
     const vectorFn: CostFunction<N> = (expected: Column<N, number>, actual: Column<N, number>) => {
-        return Array.from(expected.generateColumn(0)).reduce((acc, _, i) => {
-            acc += nodeCostFunction(expected.getValue(i, 0), actual.getValue(i, 0));
+        return Array.from(expected.generateColumn(0)).reduce((acc, expectedValue, i) => {
+            acc += nodeCostFunction(expectedValue, actual.getValue(i, 0));
             return acc;
         }) / expected.n;
     };
